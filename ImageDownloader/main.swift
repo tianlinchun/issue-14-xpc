@@ -1,0 +1,34 @@
+//
+//  ImageDownloaderMain.swift
+//  ImageDownloader
+//
+//  Created by Daniel Eggert on 22/06/2014.
+//  Copyright (c) 2014 objc.io. All rights reserved.
+//
+
+import Cocoa
+
+class ServiceDelegate : NSObject, NSXPCListenerDelegate {
+    func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
+        newConnection.exportedInterface = NSXPCInterface(with: ImageDownloaderProtocol.self)
+        newConnection.exportedObject = ImageDownloader()
+        newConnection.resume()
+        newConnection.interruptionHandler = {
+            print("\(newConnection.serviceName ?? "servicename: nil") interruption")
+        }
+        newConnection.invalidationHandler = {
+            print("\(newConnection.serviceName ?? "servicename: nil") invalidation")
+        }
+        return true
+    }
+}
+
+
+// Create the listener and resume it:
+//
+let delegate = ServiceDelegate()
+let listener = NSXPCListener.service()
+listener.delegate = delegate
+listener.resume()
+
+RunLoop.current.run()
